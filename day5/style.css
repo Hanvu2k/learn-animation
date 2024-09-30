@@ -1,0 +1,27 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.img-link img {
+  height: 24rem;
+  width: 36rem;
+  object-fit: cover;
+}
+
+.img-link:first-child img {
+  height: 30rem;
+  width: 36rem;
+}
+
+.img-link:nth-child(2) img {
+  height: 16rem;
+  width: 20rem;
+}
+
+/* Third image (remains fixed in size) */
+.img-link:nth-child(3) img {
+  height: 24rem;
+  width: 36rem;
+}
