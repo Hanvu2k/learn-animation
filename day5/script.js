@@ -1,104 +1,99 @@
 class CarouselWrapper extends HTMLElement {
   constructor() {
     super();
-    this.style.display = "flex";
-    this.style.gap = this.getAttribute("xo-gap") || "0";
-    this.style.overflow = "hidden";
+    this.items = Array.from(this.children); // Lưu trữ tất cả các item
+    this.currentIndex = 0; // Chỉ số hiện tại
+    this.updateCarousel(); // Cập nhật carousel ban đầu
+    this.style.gap = this.getAttribute("xo-gap") || "0rem";
 
-    this.items = Array.from(this.children);
-    this.imageSources = this.items.map((item) => item.querySelector("img").src);
-
-    // Variables for swipe/drag
+    // Biến để lưu trạng thái kéo
     this.isDragging = false;
     this.startPosX = 0;
-    this.currentTranslate = 0;
     this.prevTranslate = 0;
+
+    // Lấy width của item đầu tiên để tính toán
+    this.itemWidth = this.items[0]?.getBoundingClientRect().width || 0;
   }
 
   connectedCallback() {
-    this.captureInitialDimensions();
-
     const nextButton = document.querySelector("btn-next-carousel");
     const prevButton = document.querySelector("btn-prev-carousel");
 
     nextButton.addEventListener("click", () => this.next());
     prevButton.addEventListener("click", () => this.prev());
 
-    // Add event listeners for drag/swipe on the entire carousel wrapper
+    // Thêm các sự kiện cho kéo/thả
     this.addEventListener("mousedown", this.startDrag.bind(this));
     this.addEventListener("touchstart", this.startDrag.bind(this));
     this.addEventListener("mouseup", this.endDrag.bind(this));
     this.addEventListener("touchend", this.endDrag.bind(this));
     this.addEventListener("mousemove", this.dragMove.bind(this));
     this.addEventListener("touchmove", this.dragMove.bind(this));
-
-    // Prevent default actions to ensure smooth dragging behavior
-    this.addEventListener("mouseleave", this.endDrag.bind(this)); // To handle cases when dragging outside the wrapper
+    this.addEventListener("mouseleave", this.endDrag.bind(this));
   }
 
-  captureInitialDimensions() {}
-
   next() {
-    const lastSource = this.imageSources.pop();
-    this.imageSources.unshift(lastSource);
+    this.currentIndex = (this.currentIndex + 1) % this.items.length;
     this.updateCarousel();
   }
 
   prev() {
-    const firstSource = this.imageSources.shift();
-    this.imageSources.push(firstSource);
+    this.currentIndex =
+      (this.currentIndex - 1 + this.items.length) % this.items.length;
     this.updateCarousel();
   }
 
   updateCarousel() {
-    this.items.forEach((item, index) => {
-      const img = item.querySelector("carousel-item > img");
-      if (img) {
-        img.src = this.imageSources[index];
-      }
+    const offset = -this.currentIndex * this.itemWidth;
+    this.items.forEach((item) => {
+      item.style.transform = `translateX(${offset}px)`; // Sử dụng px cho chuyển động
+      item.style.transition = "transform 0.5s ease";
     });
   }
 
-  // Drag/Swipe Start
   startDrag(event) {
     this.isDragging = true;
     this.startPosX = event.type.includes("mouse")
       ? event.pageX
       : event.touches[0].clientX;
-    this.prevTranslate = this.currentTranslate;
-
-    // Prevent text selection while dragging
+    this.prevTranslate = -this.currentIndex * this.itemWidth;
     event.preventDefault();
   }
 
-  // Drag/Swipe Movement
   dragMove(event) {
     if (!this.isDragging) return;
     const currentPosition = event.type.includes("mouse")
       ? event.pageX
       : event.touches[0].clientX;
-
-    this.currentTranslate =
-      this.prevTranslate + currentPosition - this.startPosX;
+    const currentTranslate =
+      this.prevTranslate +
+      ((currentPosition - this.startPosX) / window.innerWidth) * 100; // Giữ nguyên cách tính toán tỷ lệ
+    this.items.forEach((item) => {
+      item.style.transform = `translateX(${currentTranslate}px)`; // Sử dụng px cho di chuyển
+    });
   }
 
-  // End Drag/Swipe
   endDrag(event) {
     if (!this.isDragging) return;
     this.isDragging = false;
 
-    const moveThreshold = 50; // Minimum pixels to count as a swipe
-    const swipeDistance = this.currentTranslate - this.prevTranslate;
+    const moveThreshold = 30;
+    const swipeDistance =
+      ((this.prevTranslate +
+        (event.type.includes("mouse")
+          ? event.pageX
+          : event.touches[0].clientX) -
+        this.startPosX) /
+        window.innerWidth) *
+      100;
 
     if (swipeDistance > moveThreshold) {
-      this.prev(); // Swipe right to go to previous
+      this.prev();
     } else if (swipeDistance < -moveThreshold) {
-      this.next(); // Swipe left to go to next
+      this.next();
+    } else {
+      this.updateCarousel();
     }
-
-    // Reset translate values
-    this.currentTranslate = 0;
-    this.prevTranslate = 0;
   }
 }
 
@@ -118,9 +113,7 @@ class BtnNextCarousel extends HTMLElement {
   }
 }
 
-customElements.define("btn-next-carousel", BtnNextCarousel, {
-  extends: "button",
-});
+customElements.define("btn-next-carousel", BtnNextCarousel);
 
 class BtnPrevCarousel extends HTMLElement {
   constructor() {
@@ -128,6 +121,4 @@ class BtnPrevCarousel extends HTMLElement {
   }
 }
 
-customElements.define("btn-prev-carousel", BtnPrevCarousel, {
-  extends: "button",
-});
+customElements.define("btn-prev-carousel", BtnPrevCarousel);

@@ -4,24 +4,31 @@
   box-sizing: border-box;
 }
 
+carousel-wrapper {
+  display: flex;
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+}
+
+carousel-item {
+  transition: transform 0.5s ease;
+}
+
 .img-link img {
   height: 24rem;
-  width: 36rem;
+  width: 30rem;
   object-fit: cover;
 }
 
-.img-link:first-child img {
+.img-link1 img {
   height: 30rem;
-  width: 36rem;
 }
 
-.img-link:nth-child(2) img {
+.img-link2 img {
   height: 16rem;
-  width: 20rem;
 }
 
-/* Third image (remains fixed in size) */
-.img-link:nth-child(3) img {
+.img-link3 img {
   height: 24rem;
-  width: 36rem;
 }
