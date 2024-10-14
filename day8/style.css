@@ -37,7 +37,7 @@
 }
 
 .product:hover {
-  --left: -870px;
+  --left: -770px;
   transform: translateX(-50%) translateY(-120px);
 }
 
